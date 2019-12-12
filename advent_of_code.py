@@ -272,31 +272,41 @@ def get_tree(puzzle_input):
     for input in puzzle_input:
         parent, child = input.split(')')
         if parent in nodes:
-            nodes[child] = Node(child, parent=nodes[parent])
+            if child in nodes:
+                nodes[child].parent = nodes[parent]
+            else:
+                nodes[child] = Node(child, parent=nodes[parent])
         else:
             nodes[parent] = Node(parent)
             if child in nodes:
                 nodes[child].parent = nodes[parent]
+                #nodes[parent].children = nodes[child]
             else:
                 nodes[child] = Node(child, parent=nodes[parent])
 
 
 
 
-    return [nodes['COM']]
+    return [nodes['COM'], nodes['YOU'], nodes['SAN']]
 
 
 
-def question_6_a(puzzle_input):
-    trees = get_tree(puzzle_input)
+def question_6(puzzle_input):
+    COM, YOU, SANTA = get_tree(puzzle_input)
     total_orbits = 0
-    for tree in trees:
-        for pre, file, node in RenderTree(tree):
-            orbits = str(node.parent).count('/')
-            total_orbits += orbits
-            print(f"{pre}{node.name} - Orbits: {orbits}")
 
-    return total_orbits
+    for pre, file, node in RenderTree(COM):
+        orbits = str(node.parent).count('/')
+        total_orbits += orbits
+        print(f"{pre}{node.name} - Orbits: {orbits}")
+
+    you_parents = set(str(YOU.parent).split('/')[1:])
+    santa_parents = set(str(SANTA.parent).split('/')[1:])
+    you_parents.symmetric_difference(santa_parents)
+
+
+
+    return f"A: {total_orbits} B: {len(you_parents.symmetric_difference(santa_parents))}"
 
 if __name__ == "__main__":
     check_pass_for_single_doubles("111122")
@@ -334,4 +344,4 @@ if __name__ == "__main__":
         for line in pz_in_6:
             puzzle_input_6.append(line.strip())
 
-    print(f"Q6a: {question_6_a(puzzle_input_6)}")
+    print(f"Q6: {question_6(puzzle_input_6)}")
