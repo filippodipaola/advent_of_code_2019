@@ -308,6 +308,64 @@ def question_6(puzzle_input):
 
     return f"A: {total_orbits} B: {len(you_parents.symmetric_difference(santa_parents))}"
 
+def format_layer(layer, width=25, length=6):
+    fmt_str = ""
+    for x in range(length):
+        start = x * width
+        end = start + width
+        line = ["█" if x == '1' else " " for x in layer[start: end]]
+        fmt_str = fmt_str + "".join(line) + "\n"
+    return fmt_str
+
+def process_pixel(index, layers, depth):
+    if layers[depth][index] == "2":
+        return process_pixel(index, layers, depth+1)
+    else:
+        return layers[depth][index]
+
+def process_image(image_layers):
+    return_image = [x for x in image_layers[0]]
+    for pixel_index in range(len(return_image)):
+        depth = 0
+        return_image[pixel_index] = process_pixel(pixel_index, image_layers, depth)
+
+    return return_image
+def question_8(puzzle_input):
+    width = 25
+    length = 6
+    size = width * length
+    layers = {}
+    lowest_zeros = 150
+    lowest_zero_index = None
+    for x in range(len(puzzle_input) // size):
+        index = x * size
+        end = index + size
+        substring = puzzle_input[index:end]
+        no_of_zeros = substring.count('0')
+        no_of_ones= substring.count('1')
+        no_of_twos = substring.count('2')
+        layers[x] = {"layer": substring, "0s": no_of_zeros, '1s': no_of_ones, '2s': no_of_twos}
+        if no_of_zeros < lowest_zeros:
+            lowest_zeros = no_of_zeros
+            lowest_zero_index = x
+
+    answer = layers[lowest_zero_index]['1s'] * layers[lowest_zero_index]['2s']
+    image_layers = [v['layer'] for k, v in layers.items()]
+    final_image = process_image(image_layers)
+    binary_format_image = []
+    for x in range(len(final_image)):
+        binary_format_image.append(final_image[x])
+        if (x+1) % 8 == 0:
+            binary_format_image.append(" ")
+
+    full_final = "".join(final_image)
+    full_binary = "".join(binary_format_image)
+
+    return f"A: {answer}\nB: \n\n{format_layer(full_final)}"
+
+
+
+
 if __name__ == "__main__":
     check_pass_for_single_doubles("111122")
     puz_in = load_puzzle_input("puzzle_input.txt")
@@ -344,4 +402,10 @@ if __name__ == "__main__":
         for line in pz_in_6:
             puzzle_input_6.append(line.strip())
 
-    print(f"Q6: {question_6(puzzle_input_6)}")
+    #print(f"Q6: {question_6(puzzle_input_6)}")
+
+    with open("puzzle_input_8.txt", "r") as pz_in_8:
+
+        puzzle_input_8 = pz_in_8.read()
+
+    print(f"Q8: {question_8(puzzle_input_8)}")
