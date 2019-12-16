@@ -38,6 +38,7 @@ def multiply(a, b):
     return a * b
 
 def end(a, b):
+    raise ValueError("I HIT A 99 HERE")
     return None
 
 def process_int_code(int_code, array):
@@ -366,6 +367,289 @@ def question_8(puzzle_input):
 
 
 
+def process_addition_instruction(p, array, param_1, param_2, param_3):
+
+    if param_3:
+        array[p + 3] = param_1 + param_2
+    else:
+        array[array[p + 3]] = param_1 + param_2
+    return p + 4, array
+
+
+def process_multiplication_instruction(p, array, param_1, param_2, param_3):
+    if param_3:
+        array[p + 3] = param_1 * param_2
+    else:
+        array[array[p + 3]] = param_1 * param_2
+    return p + 4, array
+
+
+def process_input_instructions(p, array, param_1, usr_in):
+    usr_input = usr_in
+    array[param_1] = usr_input
+    return p + 2, array
+
+def process_out_instruction(p, array, param_1):
+    print(param_1)
+    return p + 2, array
+
+
+def jump_if_true(p, param_1, param_2,):
+
+        if param_1 != 0:
+            return param_2
+        else:
+            return p + 3
+
+
+def jump_if_false(p, param_1, param_2, ):
+    if param_1 == 0:
+        return param_2
+    else:
+        return p + 3
+
+
+def if_less_than(p, array, param_1, param_2, param_3):
+    if param_1 < param_2:
+        array[param_3] = 1
+        return p + 4, array
+    else:
+        array[param_3] = 0
+        return p + 4, array
+
+def if_equal(p, array, param_1, param_2, param_3):
+    if param_1 == param_2:
+        array[param_3] = 1
+        return p + 4, array
+    else:
+        array[param_3] = 0
+        return p + 4, array
+
+
+def process_optcode(p, array, usr_in):
+
+    C = 0
+    B = 0
+    A = 0
+    whole_optcode = str(array[p])[::-1]
+    if len(str(array[p])) > 1:
+        optcode = int(whole_optcode[:2][::-1])
+        try:
+            C = int(whole_optcode[2])
+        except IndexError:
+            pass
+
+        try:
+            B = int(whole_optcode[3])
+        except IndexError:
+            pass
+
+        try:
+            A = int(whole_optcode[4])
+        except IndexError:
+            pass
+    else:
+        optcode = array[p]
+
+    if optcode == 1:
+        param_1 = array[p+1] if C else array[array[p+1]]
+        param_2 = array[p+2] if B else array[array[p+2]]
+
+        return process_addition_instruction(p, array, param_1, param_2, A)
+    elif optcode == 2:
+        param_1 = array[p + 1] if C else array[array[p + 1]]
+        param_2 = array[p + 2] if B else array[array[p + 2]]
+
+        return process_multiplication_instruction(p, array, param_1, param_2, A)
+    elif optcode == 3:
+        param_1 = array[p + 1]
+        return process_input_instructions(p, array, param_1, usr_in)
+    elif optcode == 4:
+        param_1 = array[p + 1] if A else array[array[p+1]]
+        return process_out_instruction(p, array, param_1)
+    elif optcode == 5:
+        param_1 = array[p + 1] if C else array[array[p + 1]]
+        param_2 = array[p + 2] if B else array[array[p + 2]]
+        return jump_if_true(p, param_1, param_2), array
+    elif optcode == 6:
+        param_1 = array[p + 1] if C else array[array[p + 1]]
+        param_2 = array[p + 2] if B else array[array[p + 2]]
+        return jump_if_false(p, param_1, param_2), array
+    elif optcode == 7:
+        param_1 = array[p + 1] if C else array[array[p + 1]]
+        param_2 = array[p + 2] if B else array[array[p + 2]]
+        param_3 = p + 3 if A else array[p + 3]
+        return if_less_than(p, array, param_1, param_2, param_3)
+    elif optcode == 8:
+        param_1 = array[p + 1] if C else array[array[p + 1]]
+        param_2 = array[p + 2] if B else array[array[p + 2]]
+        param_3 = p + 3 if A else array[p + 3]
+        return if_equal(p, array, param_1, param_2, param_3)
+    elif optcode == 99:
+        return 999999, array
+    else:
+        raise ValueError(f"UNRECOGNISED OPTCODE: {optcode}")
+
+def intcode_computer_2(input_arr, phase):
+
+    array = input_arr
+    p = 0
+    phase_count = 0
+    output_stat = 0
+    while p < len(array):
+        #print(f"INDEX: {i}, VALUE: {input_arr[i]}")
+
+        C = 0
+        B = 0
+        A = 0
+        whole_optcode = str(array[p])[::-1]
+        if len(str(array[p])) > 1:
+            optcode = int(whole_optcode[:2][::-1])
+            try:
+                C = int(whole_optcode[2])
+            except IndexError:
+                pass
+
+            try:
+                B = int(whole_optcode[3])
+            except IndexError:
+                pass
+
+            try:
+                A = int(whole_optcode[4])
+            except IndexError:
+                pass
+        else:
+            optcode = array[p]
+
+        if optcode == 1:
+            param_1 = array[p + 1] if C else array[array[p + 1]]
+            param_2 = array[p + 2] if B else array[array[p + 2]]
+
+            p, array = process_addition_instruction(p, array, param_1, param_2, A)
+        elif optcode == 2:
+            param_1 = array[p + 1] if C else array[array[p + 1]]
+            param_2 = array[p + 2] if B else array[array[p + 2]]
+
+            p, array = process_multiplication_instruction(p, array, param_1,
+                                                      param_2, A)
+        elif optcode == 3:
+            param_1 = array[p + 1]
+
+            p, array = process_input_instructions(p, array, param_1, phase[phase_count])
+
+            phase_count += 1
+        elif optcode == 4:
+            param_1 = array[p + 1] if A else array[array[p + 1]]
+            output_stat = param_1
+            p = p + 2
+        elif optcode == 5:
+            param_1 = array[p + 1] if C else array[array[p + 1]]
+            param_2 = array[p + 2] if B else array[array[p + 2]]
+            p = jump_if_true(p, param_1, param_2)
+        elif optcode == 6:
+            param_1 = array[p + 1] if C else array[array[p + 1]]
+            param_2 = array[p + 2] if B else array[array[p + 2]]
+            p = jump_if_false(p, param_1, param_2)
+        elif optcode == 7:
+            param_1 = array[p + 1] if C else array[array[p + 1]]
+            param_2 = array[p + 2] if B else array[array[p + 2]]
+            param_3 = p + 3 if A else array[p + 3]
+            p, array = if_less_than(p, array, param_1, param_2, param_3)
+        elif optcode == 8:
+            param_1 = array[p + 1] if C else array[array[p + 1]]
+            param_2 = array[p + 2] if B else array[array[p + 2]]
+            param_3 = p + 3 if A else array[p + 3]
+            p, array = if_equal(p, array, param_1, param_2, param_3)
+        elif optcode == 99:
+            return output_stat, array
+        else:
+            raise ValueError(f"UNRECOGNISED OPTCODE: {optcode}")
+
+
+def intcode_computer(input_arr, usr_in):
+
+    i = 0
+    while i < len(input_arr):
+        #print(f"INDEX: {i}, VALUE: {input_arr[i]}")
+
+        val = input_arr[i]
+        return_statements = process_optcode(i, input_arr, usr_in)
+        i = return_statements[0]
+        input_arr = return_statements[1]
+        if len(return_statements) == 3:
+            return return_statements[2]
+
+
+
+
+
+def question_5(puzzle_input, usr_in):
+    return intcode_computer([int(x) for x in puzzle_input.split(",")], usr_in)
+
+
+
+def question_7_a(puzzle_input):
+    biggest_val = 0
+    for a in range(0, 5):
+        for b in range(0,5):
+            for c in range(0,5):
+                for d in range(0, 5):
+                    for e in range(0, 5):
+                        phase_values = [a, b, c, d, e]
+                        if len(phase_values) == len(set(phase_values)):
+                            return_val = 0
+                            for value in phase_values:
+                                puz_copy = deepcopy(puzzle_input)
+                                return_val, array = intcode_computer_2([int(x) for x in puz_copy.split(",")], [value, return_val])
+
+                            if return_val > biggest_val:
+                                biggest_val = return_val
+                                # print(f"PHASE INPUT: {phase_values}, RESULT: {return_val}")
+
+    return biggest_val
+
+
+def question_7_b(puzzle_input):
+    biggest_val = 0
+    bot = 5
+    top = 10
+    for a in range(bot, top):
+        for b in range(bot, top):
+            for c in range(bot, top):
+                for d in range(bot, top):
+                    for e in range(bot, top):
+                        phase_values = [a, b, c, d, e]
+                        if len(phase_values) == len(set(phase_values)):
+                            return_val = 0
+                            puz_dict = {}
+                            while True:
+                                phase_values
+                                for value in phase_values:
+                                    if value in puz_dict:
+                                        process_puz = puz_dict[value]
+
+                                    else:
+                                        puz_in = deepcopy(puzzle_input)
+                                        process_puz = [int(x) for x in
+                                                       puz_in.split(",")]
+                                        puz_dict[value] = process_puz
+
+
+                                    return_val, array = intcode_computer_2(process_puz, [value, return_val])
+                                    puz_dict[value] = array
+                                    print(puz_dict[5])
+
+                                    if return_val == "EXIT":
+                                        break
+
+                            if return_val > biggest_val:
+                                biggest_val = return_val
+                                #print(f"PHASE INPUT: {phase_values}, RESULT: {return_val}")
+
+    return biggest_val
+
+
 if __name__ == "__main__":
     check_pass_for_single_doubles("111122")
     puz_in = load_puzzle_input("puzzle_input.txt")
@@ -397,6 +681,16 @@ if __name__ == "__main__":
 
     #print(f"Q4a: {question_4_a(153517, 630395)}")
     #print(f"Q4b: {question_4_b(153517, 630395)}")
+
+    with open("puzzle_input_5.txt", "r") as read_in:
+        puzzle_input_5 = read_in.read()
+
+    #print("Q5_a")
+    #question_5(puzzle_input_5, 1)
+
+    #print("Q5_b")
+    #question_5(puzzle_input_5, 5)
+
     puzzle_input_6 =[]
     with open("puzzle_input_6.txt", "r") as pz_in_6:
         for line in pz_in_6:
@@ -404,8 +698,17 @@ if __name__ == "__main__":
 
     #print(f"Q6: {question_6(puzzle_input_6)}")
 
+
+    with open("puzzle_input_7.txt", "r") as pz_in_7:
+        puzzle_input_7 = pz_in_7.read()
+    print(f"Q7a: {question_7_a(puzzle_input_7)}")
+    print(f" Q7b {question_7_b(puzzle_input_7)}")
+
+
+
+
     with open("puzzle_input_8.txt", "r") as pz_in_8:
 
         puzzle_input_8 = pz_in_8.read()
 
-    print(f"Q8: {question_8(puzzle_input_8)}")
+    #print(f"Q8: {question_8(puzzle_input_8)}")
